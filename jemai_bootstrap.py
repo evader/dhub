@@ -7,8 +7,6 @@ from datetime import datetime
 import tempfile
 
 # --- GITHUB CREDENTIALS FOR CANVAS AUTOSYNC + LOCAL SECRETS LOADER ---
-# Will load credentials from jemai_secrets.py (never committed),
-# else use hardcoded canvas credentials (as per your rules).
 USE_CANVAS_CREDS = True
 if Path("jemai_secrets.py").exists():
     try:
@@ -19,8 +17,7 @@ if Path("jemai_secrets.py").exists():
         print(f"[secrets] Could not load local secrets file: {e}")
 if USE_CANVAS_CREDS:
     GITHUB_USERNAME = "evader"
-    # Active token for evaderbot - rotate if compromised
-    GITHUB_PAT = "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"  # NEW PAT
+    GITHUB_PAT = "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"  # NEW PAT here
 GITHUB_REMOTE = f"https://{GITHUB_USERNAME}:{GITHUB_PAT}@github.com/evader/dhub.git"
 # ---------------------------------------------
 
@@ -65,14 +62,10 @@ def check_space():
     return {'root': str(root), 'total': total, 'used': used, 'free': free}
 
 def active_jobs():
-    # Process inspection not supported in some restricted/sandboxed environments.
-    # This function now simply notifies and does not attempt process listing if unsupported.
     try:
-        # Only attempt if not in restricted envs (like emscripten)
         if hasattr(os, 'popen') and sys.platform not in ['emscripten', 'wasi']:
             running = []
             if platform.system() == 'Windows':
-                # List running processes, check for ssh.exe or robocopy etc
                 try:
                     for proc in os.popen('tasklist').read().splitlines():
                         if any(tool in proc.lower() for tool in ['ssh', 'robocopy', 'scp']):
@@ -101,12 +94,10 @@ def active_jobs():
 def scan_for_created_files():
     log('--- Scanning for files created by jemai_bootstrap.py ---')
     found = []
-    # Check current working dir
     cwd = Path.cwd()
     for file in cwd.iterdir():
         if file.name.startswith('jemai_') and file.is_file():
             found.append(file)
-    # Check temp dirs
     tempdirs = [tempfile.gettempdir()]
     if platform.system() == 'Windows':
         tempdirs.append(os.environ.get('TEMP', ''))
@@ -160,10 +151,7 @@ def force_git_remote():
         print(f"Could not set remote with credentials: {e}")
 
 def autosync_to_github():
-    """
-    Adds, commits, and pushes changes to the current git repo if possible.
-    Only runs if git is available and the repo is initialized.
-    """
+    """Adds, commits, and pushes changes to the current git repo if possible."""
     import subprocess
     try:
         if (Path.cwd() / '.git').exists():
@@ -184,19 +172,16 @@ def setup_autopull_agent():
     """Creates and launches an auto-pull agent (Windows only) to keep local repo in sync."""
     import subprocess
     agent_path = Path('jemai_autopull.bat')
-    # Create the batch file if it doesn't exist
     if not agent_path.exists():
         with open(agent_path, 'w') as bat:
             bat.write("""@echo off\ncd /d %~dp0\n:loop\ngit pull\ntimeout /t 30 >nul\ngoto loop\n""")
         log(f"[Agent Setup] jemai_autopull.bat created.")
-    # Check if agent is already running
     try:
         result = subprocess.check_output('tasklist', shell=True).decode()
         if 'jemai_autopull.bat' in result:
             log('[Agent Setup] Auto-pull agent already running.')
             print('[Agent Setup] Auto-pull agent already running.')
         else:
-            # Launch the agent in a detached window
             subprocess.Popen(['start', 'jemai_autopull.bat'], shell=True)
             log('[Agent Setup] Auto-pull agent started.')
             print('[Agent Setup] Auto-pull agent started.')
@@ -208,6 +193,5 @@ if __name__ == '__main__':
     main()
     print_logfile()
     autosync_to_github()
-    # Setup the agent once (Windows only):
     if platform.system() == 'Windows':
         setup_autopull_agent()

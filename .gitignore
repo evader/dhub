@@ -1,11 +1,9 @@
-Python cache/bytecode
-
-pycache/
+# Python cache/bytecode
+__pycache__/
 *.py[cod]
 *$py.class
 
-Virtual environments
-
+# Virtual environments
 env/
 venv/
 ENV/
@@ -13,37 +11,29 @@ ENV/
 env.bak/
 venv.bak/
 
-VSCode config
-
+# VSCode config
 .vscode/
 
-Logs (never commit logs!)
-
+# Logs (never commit logs!)
 *.log
 jemai_bootstrap.log
 
-Local agent script
-
+# Local agent script
 jemai_autopull.bat
 
-Local secrets (never commit secrets!)
-
+# Local secrets (never commit secrets!)
 jemai_secrets.py
 jemai_secrets.env
 
-OS and editor cruft
-
+# OS and editor cruft
 .DS_Store
 Thumbs.db
 
-Jupyter/IPython/Notebook
-
+# Jupyter/IPython/Notebook
 .ipynb_checkpoints
 
-Pytest and test output
-
+# Pytest and test output
 .pytest_cache/
 .cache
 .coverage
 htmlcov/
-
