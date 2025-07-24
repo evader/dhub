@@ -7,6 +7,20 @@ from datetime import datetime
 import tempfile
 
 # Universal, native-first bootstrapper for JEMAI AGI OS
+
+# --- GITHUB CREDENTIALS FOR CANVAS AUTOSYNC ---
+# --- GITHUB CREDENTIALS FOR CANVAS AUTOSYNC ---
+GITHUB_USERNAME = "evader"
+# Active token for evaderbot - rotate if compromised
+GITHUB_PAT = "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"  # evaderbot PAT
+# Or use classic PAT if needed:
+# GITHUB_PAT = "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"
+# Or use fine-grained PAT:
+# GITHUB_PAT = "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"
+GITHUB_REMOTE = f"https://{GITHUB_USERNAME}:{GITHUB_PAT}@github.com/evader/dhub.git"
+# ---------------------------------------------
+# ---------------------------------------------
+
 # No Docker. No black box. Pure Python. Modular. Extensible.
 
 LOG_FILE = Path.cwd() / 'jemai_bootstrap.log'
@@ -131,6 +145,15 @@ def print_logfile():
     else:
         print("No jemai_bootstrap.log file found.")
 
+def force_git_remote():
+    """Sets the git remote to use credentials for autosync in stateless environments (like canvas)"""
+    import subprocess
+    try:
+        if (Path.cwd() / '.git').exists():
+            subprocess.run(["git", "remote", "set-url", "origin", GITHUB_REMOTE], check=True)
+    except Exception as e:
+        print(f"Could not set remote with credentials: {e}")
+
 def autosync_to_github():
     """
     Adds, commits, and pushes changes to the current git repo if possible.
@@ -138,8 +161,8 @@ def autosync_to_github():
     """
     import subprocess
     try:
-        # Only proceed if .git exists
-        if (Path.cwd() / ".git").exists():
+        if (Path.cwd() / '.git').exists():
+            force_git_remote()
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             subprocess.run(["git", "add", "."], check=True)
             subprocess.run(["git", "commit", "-m", f"Auto-sync at {now}"], check=True)
@@ -152,7 +175,41 @@ def autosync_to_github():
     except Exception as e:
         print(f"Auto-sync error: {e}")
 
+def setup_autopull_agent():
+    """Creates and launches an auto-pull agent (Windows only) to keep local repo in sync."""
+    import subprocess
+    agent_path = Path('jemai_autopull.bat')
+    # Create the batch file if it doesn't exist
+    if not agent_path.exists():
+        with open(agent_path, 'w') as bat:
+            bat.write("""@echo off
+cd /d %~dp0
+:loop
+git pull
+timeout /t 30 >nul
+goto loop
+""")
+        log(f"[Agent Setup] jemai_autopull.bat created.")
+    # Check if agent is already running
+    try:
+        result = subprocess.check_output('tasklist', shell=True).decode()
+        if 'jemai_autopull.bat' in result:
+            log('[Agent Setup] Auto-pull agent already running.')
+            print('[Agent Setup] Auto-pull agent already running.')
+        else:
+            # Launch the agent in a detached window
+            subprocess.Popen(['start', 'jemai_autopull.bat'], shell=True)
+            log('[Agent Setup] Auto-pull agent started.')
+            print('[Agent Setup] Auto-pull agent started.')
+    except Exception as e:
+        log(f'[Agent Setup] Could not check/start agent: {e}')
+        print(f'[Agent Setup] Could not check/start agent: {e}')
+
 if __name__ == '__main__':
     main()
     print_logfile()
     autosync_to_github()
+    # Setup the agent once (Windows only):
+    if platform.system() == 'Windows':
+        setup_autopull_agent()
+
