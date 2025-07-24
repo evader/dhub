@@ -6,22 +6,28 @@ from pathlib import Path
 from datetime import datetime
 import tempfile
 
-# Universal, native-first bootstrapper for JEMAI AGI OS
-
-# --- GITHUB CREDENTIALS FOR CANVAS AUTOSYNC ---
-# --- GITHUB CREDENTIALS FOR CANVAS AUTOSYNC ---
-GITHUB_USERNAME = "evader"
-# Active token for evaderbot - rotate if compromised
-GITHUB_PAT = "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"  # evaderbot PAT
-# Or use classic PAT if needed:
-# GITHUB_PAT = "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"
-# Or use fine-grained PAT:
-# GITHUB_PAT = "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"
+#DDOESITCHANGE
+# --- GITHUB CREDENTIALS FOR CANVAS AUTOSYNC + LOCAL SECRETS LOADER ---
+# Will load credentials from jemai_secrets.py (never committed),
+# else use hardcoded canvas credentials (as per your rules).
+USE_CANVAS_CREDS = True
+if Path("jemai_secrets.py").exists():
+    try:
+        from jemai_secrets import GITHUB_USERNAME, GITHUB_PAT
+        USE_CANVAS_CREDS = False
+        print("[secrets] Loaded GITHUB creds from jemai_secrets.py (local only, not committed)")
+    except Exception as e:
+        print(f"[secrets] Could not load local secrets file: {e}")
+if USE_CANVAS_CREDS:
+    GITHUB_USERNAME = "evader"
+    # Active token for evaderbot - rotate if compromised
+    GITHUB_PAT = "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"  # evaderbot PAT
+    # Or use classic PAT if needed:
+    # GITHUB_PAT = "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"
+    # Or use fine-grained PAT:
+    # GITHUB_PAT = "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"
 GITHUB_REMOTE = f"https://{GITHUB_USERNAME}:{GITHUB_PAT}@github.com/evader/dhub.git"
 # ---------------------------------------------
-# ---------------------------------------------
-
-# No Docker. No black box. Pure Python. Modular. Extensible.
 
 LOG_FILE = Path.cwd() / 'jemai_bootstrap.log'
 CREATED_FILES = []
@@ -141,7 +147,7 @@ def print_logfile():
         print("===== jemai_bootstrap.log =====")
         with open(log_path, 'r', encoding='utf-8') as f:
             print(f.read())
-        print("===== end of log =====")  # Fixed unterminated string error
+        print("===== end of log =====")
     else:
         print("No jemai_bootstrap.log file found.")
 
@@ -182,13 +188,7 @@ def setup_autopull_agent():
     # Create the batch file if it doesn't exist
     if not agent_path.exists():
         with open(agent_path, 'w') as bat:
-            bat.write("""@echo off
-cd /d %~dp0
-:loop
-git pull
-timeout /t 30 >nul
-goto loop
-""")
+            bat.write("""@echo off\ncd /d %~dp0\n:loop\ngit pull\ntimeout /t 30 >nul\ngoto loop\n""")
         log(f"[Agent Setup] jemai_autopull.bat created.")
     # Check if agent is already running
     try:
@@ -212,4 +212,3 @@ if __name__ == '__main__':
     # Setup the agent once (Windows only):
     if platform.system() == 'Windows':
         setup_autopull_agent()
-
