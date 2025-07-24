@@ -127,10 +127,32 @@ def print_logfile():
         print("===== jemai_bootstrap.log =====")
         with open(log_path, 'r', encoding='utf-8') as f:
             print(f.read())
-        print("===== end of log =====\n")
+        print("===== end of log =====")  # Fixed unterminated string error
     else:
         print("No jemai_bootstrap.log file found.")
+
+def autosync_to_github():
+    """
+    Adds, commits, and pushes changes to the current git repo if possible.
+    Only runs if git is available and the repo is initialized.
+    """
+    import subprocess
+    try:
+        # Only proceed if .git exists
+        if (Path.cwd() / ".git").exists():
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            subprocess.run(["git", "add", "."], check=True)
+            subprocess.run(["git", "commit", "-m", f"Auto-sync at {now}"], check=True)
+            subprocess.run(["git", "push", "origin", "main"], check=True)
+            print("Auto-sync to GitHub: success.")
+        else:
+            print("Auto-sync skipped: not a git repo.")
+    except subprocess.CalledProcessError as e:
+        print(f"Auto-sync to GitHub failed: {e}")
+    except Exception as e:
+        print(f"Auto-sync error: {e}")
 
 if __name__ == '__main__':
     main()
     print_logfile()
+    autosync_to_github()
