@@ -6,7 +6,7 @@ from pathlib import Path
 from datetime import datetime
 import tempfile
 
-#DDOESITCHANGE
+#DDOESITCHANGE2
 # --- GITHUB CREDENTIALS FOR CANVAS AUTOSYNC + LOCAL SECRETS LOADER ---
 # Will load credentials from jemai_secrets.py (never committed),
 # else use hardcoded canvas credentials (as per your rules).
@@ -152,11 +152,15 @@ def print_logfile():
         print("No jemai_bootstrap.log file found.")
 
 def force_git_remote():
-    """Sets the git remote to use credentials for autosync in stateless environments (like canvas)"""
+    """Sets the git remote to use credentials for autosync on every run, everywhere."""
     import subprocess
     try:
         if (Path.cwd() / '.git').exists():
-            subprocess.run(["git", "remote", "set-url", "origin", GITHUB_REMOTE], check=True)
+            subprocess.run([
+                "git", "remote", "set-url", "origin",
+                f"https://{GITHUB_USERNAME}:{GITHUB_PAT}@github.com/evader/dhub.git"
+            ], check=True)
+            print("[git] Remote set for universal autosync.")
     except Exception as e:
         print(f"Could not set remote with credentials: {e}")
 
