@@ -6,7 +6,6 @@ from pathlib import Path
 from datetime import datetime
 import tempfile
 
-#DDOESITCHANGE2
 # --- GITHUB CREDENTIALS FOR CANVAS AUTOSYNC + LOCAL SECRETS LOADER ---
 # Will load credentials from jemai_secrets.py (never committed),
 # else use hardcoded canvas credentials (as per your rules).
@@ -21,11 +20,7 @@ if Path("jemai_secrets.py").exists():
 if USE_CANVAS_CREDS:
     GITHUB_USERNAME = "evader"
     # Active token for evaderbot - rotate if compromised
-    GITHUB_PAT = "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"  # evaderbot PAT
-    # Or use classic PAT if needed:
-    # GITHUB_PAT = "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"
-    # Or use fine-grained PAT:
-    # GITHUB_PAT = "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"
+    GITHUB_PAT = "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"  # NEW PAT
 GITHUB_REMOTE = f"https://{GITHUB_USERNAME}:{GITHUB_PAT}@github.com/evader/dhub.git"
 # ---------------------------------------------
 
@@ -128,7 +123,7 @@ def scan_for_created_files():
     return found
 
 def main():
-    log('==== JEMAI Universal Bootstrapper (Native, No Docker) ===='\
+    log('==== JEMAI Universal Bootstrapper (Native, No Docker) ===='
         '\nStarting environment detection...')
     env = detect_platform()
     space = check_space()
